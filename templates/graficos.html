@@ -1,0 +1,515 @@
+{% extends "base.html" %}
+
+{% block title %}BeneficSeeds | Gráficos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1rem;
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .chart-card {
+        background-color: var(--branco);
+        border-radius: 12px;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border: 2px solid transparent;
+        position: relative;
+    }
+
+    .chart-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        border-color: var(--verde-oliva);
+    }
+
+    /* Efeito de seleção quando clicado */
+    .chart-card.selected {
+        border-color: var(--verde-oliva);
+        box-shadow: 0 0 0 3px rgba(139, 169, 63, 0.3);
+        transform: scale(0.98);
+    }
+
+    .chart-card img.chart-img {
+        width: 100%;
+        height: 220px;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+
+    .chart-card:hover img.chart-img {
+        transform: scale(1.05);
+    }
+
+    .page-header {
+        color: var(--verde-oliva);
+        font-family: 'Merriweather', serif;
+        font-size: 1.6rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Texto de instruções - PRETO com CONTORNO AZULADO */
+    .instructions-text {
+        color: #000000;
+        font-size: 1.1rem;
+        font-weight: 600;
+        line-height: 1.5;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        padding: 0.75rem 1rem;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border: 2px solid #e3f2fd;
+        letter-spacing: 0.3px;
+        text-shadow: 
+            0.5px 0.5px 0px #bbdefb,
+            -0.5px -0.5px 0px #bbdefb,
+            0.5px -0.5px 0px #bbdefb,
+            -0.5px 0.5px 0px #bbdefb;
+        box-shadow: 0 2px 8px rgba(33, 150, 243, 0.15);
+        cursor: default;
+    }
+
+    .instructions-text:hover {
+        border-color: #90caf9;
+        box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    /* Modal para gráficos ampliados */
+    .chart-modal-img {
+        width: 100%;
+        height: auto;
+        max-height: 80vh;
+        object-fit: contain;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: transform 0.3s ease;
+    }
+
+    .chart-modal-img:hover {
+        transform: scale(1.02);
+    }
+
+    .modal-content {
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, var(--verde-oliva), var(--amarelo-dourado));
+        color: white;
+        border-bottom: none;
+        border-radius: 16px 16px 0 0;
+    }
+
+    .modal-title {
+        font-weight: 700;
+        font-family: 'Merriweather', serif;
+    }
+
+    .btn-close-white {
+        filter: invert(1);
+    }
+
+    .grafico-titulo {
+        color: var(--verde-oliva);
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+        text-align: center;
+    }
+
+    /* Indicador de clique */
+    .click-indicator {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: var(--verde-oliva);
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .chart-card:hover .click-indicator {
+        opacity: 1;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .instructions-text {
+            font-size: 1rem;
+            padding: 0.6rem 0.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .instructions-text {
+            font-size: 0.95rem;
+            text-align: left;
+            text-shadow: 
+                0.3px 0.3px 0px #bbdefb,
+                -0.3px -0.3px 0px #bbdefb,
+                0.3px -0.3px 0px #bbdefb,
+                -0.3px 0.3px 0px #bbdefb;
+        }
+    }
+
+    @media (prefers-contrast: high) {
+        .instructions-text {
+            background-color: #000000;
+            color: #ffffff;
+            border-color: #2196f3;
+            text-shadow: none;
+        }
+    }
+
+    /* Estilo para elementos de acessibilidade */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="mb-4">
+        <h1 class="page-header">Dashboard de Gráficos Interativo</h1>
+        
+        <!-- TEXTO OTIMIZADO PARA "LER ELEMENTO" - SEM ANÚNCIO AUTOMÁTICO -->
+        <div class="instructions-text" 
+             id="instrucoes-acessibilidade"
+             tabindex="0"
+             role="note"
+             aria-label="Instruções de uso: Clique em qualquer gráfico para ampliar. Use o leitor de tela para acessibilidade completa.">
+            <span aria-hidden="true">📊</span>
+            <strong>Clique em qualquer gráfico para ampliar.</strong> 
+            Use o leitor de tela para acessibilidade completa.
+        </div>
+    </div>
+
+    <div class="charts-grid">
+        <!-- Gráfico 1: Classificação -->
+        <div class="chart-card" 
+             onclick="openModal('modalClassificacao')"
+             tabindex="0"
+             role="button"
+             aria-labelledby="titulo-classificacao"
+             aria-describedby="instrucoes-acessibilidade"
+             onkeypress="if(event.key === 'Enter') openModal('modalClassificacao')">
+            <div class="click-indicator" aria-hidden="true">👆</div>
+            <div class="grafico-titulo" id="titulo-classificacao">📊 Por Classificação</div>
+            <img src="data:image/png;base64,{{ imagem_class }}" class="chart-img" alt="Gráfico de barras mostrando distribuição de ocorrências por tipo de colaborador">
+        </div>
+
+        <!-- Gráfico 2: Local -->
+        <div class="chart-card" 
+             onclick="openModal('modalLocal')"
+             tabindex="0"
+             role="button"
+             aria-labelledby="titulo-local"
+             aria-describedby="instrucoes-acessibilidade"
+             onkeypress="if(event.key === 'Enter') openModal('modalLocal')">
+            <div class="click-indicator" aria-hidden="true">👆</div>
+            <div class="grafico-titulo" id="titulo-local">🏭 Por Local</div>
+            <img src="data:image/png;base64,{{ imagem_local }}" class="chart-img" alt="Gráfico de pizza mostrando distribuição de ocorrências por localização">
+        </div>
+
+        <!-- Gráfico 3: Situação -->
+        <div class="chart-card" 
+             onclick="openModal('modalSituacao')"
+             tabindex="0"
+             role="button"
+             aria-labelledby="titulo-situacao"
+             aria-describedby="instrucoes-acessibilidade"
+             onkeypress="if(event.key === 'Enter') openModal('modalSituacao')">
+            <div class="click-indicator" aria-hidden="true">👆</div>
+            <div class="grafico-titulo" id="titulo-situacao">🔍 Situação (Causa)</div>
+            <img src="data:image/png;base64,{{ imagem_agentes }}" class="chart-img" alt="Gráfico de barras horizontais mostrando situações classificadas por causa">
+        </div>
+
+        <!-- Gráfico 4: Condições Inseguras -->
+        <div class="chart-card" 
+             onclick="openModal('modalCondicoes')"
+             tabindex="0"
+             role="button"
+             aria-labelledby="titulo-condicoes"
+             aria-describedby="instrucoes-acessibilidade"
+             onkeypress="if(event.key === 'Enter') openModal('modalCondicoes')">
+            <div class="click-indicator" aria-hidden="true">👆</div>
+            <div class="grafico-titulo" id="titulo-condicoes">⚠️ Condições Inseguras</div>
+            <img src="data:image/png;base64,{{ imagem_multipla_condição }}" class="chart-img" alt="Gráfico de barras mostrando tipos de condições inseguras identificadas">
+        </div>
+
+        <!-- Gráfico 5: Comportamentos Inseguros -->
+        <div class="chart-card" 
+             onclick="openModal('modalComportamentos')"
+             tabindex="0"
+             role="button"
+             aria-labelledby="titulo-comportamentos"
+             aria-describedby="instrucoes-acessibilidade"
+             onkeypress="if(event.key === 'Enter') openModal('modalComportamentos')">
+            <div class="click-indicator" aria-hidden="true">👆</div>
+            <div class="grafico-titulo" id="titulo-comportamentos">🚫 Comportamentos Inseguros</div>
+            <img src="data:image/png;base64,{{ imagem_multipla_comportamento }}" class="chart-img" alt="Gráfico de barras mostrando tipos de comportamentos inseguros observados">
+        </div>
+
+        <!-- Gráfico 6: Ocorrências Ambientais -->
+        <div class="chart-card" 
+             onclick="openModal('modalAmbiental')"
+             tabindex="0"
+             role="button"
+             aria-labelledby="titulo-ambiental"
+             aria-describedby="instrucoes-acessibilidade"
+             onkeypress="if(event.key === 'Enter') openModal('modalAmbiental')">
+            <div class="click-indicator" aria-hidden="true">👆</div>
+            <div class="grafico-titulo" id="titulo-ambiental">🌿 Ocorrências Ambientais</div>
+            <img src="data:image/png;base64,{{ imagem_multipla_ambiental }}" class="chart-img" alt="Gráfico de barras mostrando ocorrências relacionadas ao meio ambiente">
+        </div>
+
+        <!-- Gráfico 7: Observações e Quase-Acidentes -->
+        <div class="chart-card" 
+             onclick="openModal('modalSST')"
+             tabindex="0"
+             role="button"
+             aria-labelledby="titulo-sst"
+             aria-describedby="instrucoes-acessibilidade"
+             onkeypress="if(event.key === 'Enter') openModal('modalSST')">
+            <div class="click-indicator" aria-hidden="true">👆</div>
+            <div class="grafico-titulo" id="titulo-sst">📝 Observações e Quase-Acidentes</div>
+            <img src="data:image/png;base64,{{ imagem_class_sst }}" class="chart-img" alt="Gráfico de pizza mostrando distribuição entre observações e quase acidentes">
+        </div>
+    </div>
+
+    <!-- Modais (mantidos iguais) -->
+    <!-- Modal Classificação -->
+    <div class="modal fade" id="modalClassificacao" tabindex="-1" aria-labelledby="modalClassificacaoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalClassificacaoLabel">📊 Ocorrências por Tipo de Colaborador</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar gráfico ampliado"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="data:image/png;base64,{{ imagem_class }}" class="chart-modal-img" 
+                         alt="Gráfico ampliado - Distribuição detalhada de ocorrências por tipo de colaborador" 
+                         onclick="closeModal('modalClassificacao')"
+                         tabindex="0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Local -->
+    <div class="modal fade" id="modalLocal" tabindex="-1" aria-labelledby="modalLocalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLocalLabel">🏭 Ocorrências por Local</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar gráfico ampliado"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="data:image/png;base64,{{ imagem_local }}" class="chart-modal-img" 
+                         alt="Gráfico ampliado - Distribuição detalhada de ocorrências por localização" 
+                         onclick="closeModal('modalLocal')"
+                         tabindex="0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Situação -->
+    <div class="modal fade" id="modalSituacao" tabindex="-1" aria-labelledby="modalSituacaoLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalSituacaoLabel">🔍 Situação (Causa)</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar gráfico ampliado"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="data:image/png;base64,{{ imagem_agentes }}" class="chart-modal-img" 
+                         alt="Gráfico ampliado - Situações classificadas por causa" 
+                         onclick="closeModal('modalSituacao')"
+                         tabindex="0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Condições -->
+    <div class="modal fade" id="modalCondicoes" tabindex="-1" aria-labelledby="modalCondicoesLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCondicoesLabel">⚠️ Condições Inseguras</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar gráfico ampliado"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="data:image/png;base64,{{ imagem_multipla_condição }}" class="chart-modal-img" 
+                         alt="Gráfico ampliado - Tipos de condições inseguras identificadas" 
+                         onclick="closeModal('modalCondicoes')"
+                         tabindex="0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Comportamentos -->
+    <div class="modal fade" id="modalComportamentos" tabindex="-1" aria-labelledby="modalComportamentosLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalComportamentosLabel">🚫 Comportamentos Inseguros</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar gráfico ampliado"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="data:image/png;base64,{{ imagem_multipla_comportamento }}" class="chart-modal-img" 
+                         alt="Gráfico ampliado - Tipos de comportamentos inseguros observados" 
+                         onclick="closeModal('modalComportamentos')"
+                         tabindex="0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ambiental -->
+    <div class="modal fade" id="modalAmbiental" tabindex="-1" aria-labelledby="modalAmbientalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAmbientalLabel">🌿 Ocorrências Ambientais</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar gráfico ampliado"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="data:image/png;base64,{{ imagem_multipla_ambiental }}" class="chart-modal-img" 
+                         alt="Gráfico ampliado - Ocorrências relacionadas ao meio ambiente" 
+                         onclick="closeModal('modalAmbiental')"
+                         tabindex="0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal SST -->
+    <div class="modal fade" id="modalSST" tabindex="-1" aria-labelledby="modalSSTLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalSSTLabel">📝 Observações e Quase Acidentes</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar gráfico ampliado"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img src="data:image/png;base64,{{ imagem_class_sst }}" class="chart-modal-img" 
+                         alt="Gráfico ampliado - Distribuição entre observações e quase acidentes" 
+                         onclick="closeModal('modalSST')"
+                         tabindex="0">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Função para abrir modal com efeito visual
+    function openModal(modalId) {
+        const modalElement = document.getElementById(modalId);
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+            
+            // Efeito visual de seleção
+            const chartCard = event.currentTarget;
+            chartCard.classList.add('selected');
+            
+            // Remover seleção após um tempo
+            setTimeout(() => {
+                chartCard.classList.remove('selected');
+            }, 300);
+            
+            // Focar no modal quando abrir
+            modalElement.addEventListener('shown.bs.modal', function () {
+                const closeButton = modalElement.querySelector('[data-bs-dismiss="modal"]');
+                if (closeButton) closeButton.focus();
+            });
+            
+            // Anunciar para leitor de tela apenas se ativo pelo usuário
+            if (window.leitorFlutuante && window.leitorFlutuante.ativo) {
+                const modalTitle = modalElement.querySelector('.modal-title').textContent;
+                window.leitorFlutuante.falar(`Gráfico ampliado: ${modalTitle}`);
+            }
+        }
+    }
+    
+    // Função para fechar modal clicando na imagem
+    function closeModal(modalId) {
+        const modal = bootstrap.Modal.getInstance(document.getElementById(modalId));
+        if (modal) {
+            modal.hide();
+        }
+    }
+    
+    // Navegação por teclado
+    document.addEventListener('keydown', function(event) {
+        // Fechar modal com ESC
+        if (event.key === 'Escape') {
+            const modals = document.querySelectorAll('.modal.show');
+            modals.forEach(modal => {
+                const modalInstance = bootstrap.Modal.getInstance(modal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            });
+        }
+    });
+
+    // NÃO INICIALIZAR LEITOR AUTOMATICAMENTE
+    // O texto está preparado para ser lido quando o usuário usar "ler elemento"
+
+    // Evento para quando o elemento de instruções receber foco (opcional)
+    document.addEventListener('DOMContentLoaded', function() {
+        const instrucoesElement = document.getElementById('instrucoes-acessibilidade');
+        
+        if (instrucoesElement) {
+            // Apenas preparar o elemento, sem anunciar automaticamente
+            instrucoesElement.addEventListener('focus', function() {
+                // O elemento está pronto para ser lido quando o usuário quiser
+                console.log('Instruções de acessibilidade focadas - prontas para leitura');
+            });
+            
+            // Também funciona com clique para leitores que usam mouse
+            instrucoesElement.addEventListener('click', function() {
+                // Não faz nada automaticamente, apenas permite foco
+                this.focus();
+            });
+        }
+    });
+</script>
+{% endblock %}

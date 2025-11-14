@@ -1,2 +1,13 @@
-# PreventSys
-Profissional, foca na prevenção que é o cerne da segurança do trabalho.
+# Aplicação Flask SSMA
+
+## Requisitos
+- Python 3.9+
+- Instale os requisitos:
+```
+pip install -r requirements.txt
+```
+
+## Como rodar:
+```
+flask --app main run
+```

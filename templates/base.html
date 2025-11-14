@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}BeneficSeeds{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Nunito+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    <!-- Estilos do Leitor Flutuante -->
+    <style>
+        #botao-leitor-global {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: linear-gradient(135deg, #556B2F, #8B4513);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            font-family: 'Nunito Sans', sans-serif;
+        }
+
+        #botao-leitor-global:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        }
+
+        #botao-leitor-global.ativo {
+            background: linear-gradient(135deg, #8B4513, #556B2F);
+            animation: pulsar 2s infinite;
+        }
+
+        @keyframes pulsar {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .leitor-painel-global {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 9999;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            padding: 0;
+            width: 350px;
+            max-width: 90vw;
+            display: none;
+            border: 2px solid #556B2F;
+            font-family: 'Nunito Sans', sans-serif;
+        }
+
+        .leitor-painel-global.mostrar {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .leitor-header-global {
+            background: linear-gradient(135deg, #556B2F, #6B8E23);
+            color: white;
+            padding: 15px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .leitor-header-global h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .btn-fechar-global {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-fechar-global:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .leitor-controles-global {
+            padding: 15px;
+        }
+
+        .controle-grupo-global {
+            margin-bottom: 15px;
+        }
+
+        .controle-grupo-global label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #556B2F;
+            font-size: 14px;
+        }
+
+        .controle-grupo-global input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .controle-botoes-global {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 15px 0;
+        }
+
+        .btn-controle-global {
+            background: #556B2F;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s ease;
+            font-family: 'Nunito Sans', sans-serif;
+        }
+
+        .btn-controle-global:hover {
+            background: #6B8E23;
+        }
+
+        .btn-desativar {
+            background: #dc3545;
+            grid-column: 1 / -1;
+            margin-top: 5px;
+        }
+
+        .btn-desativar:hover {
+            background: #c82333;
+        }
+
+        .leitor-status-global {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 10px;
+            border-left: 4px solid #556B2F;
+        }
+
+        .elemento-lendo-global {
+            background-color: #FFF3CD !important;
+            border: 2px solid #FFC107 !important;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .elemento-focado-global {
+            outline: 3px solid #556B2F !important;
+            outline-offset: 2px;
+        }
+
+        /* Estilos para o modo seleção com overlay */
+        .leitor-overlay {
+            pointer-events: auto !important;
+        }
+
+        .leitor-overlay:hover {
+            background-color: rgba(85, 107, 47, 0.2) !important;
+            border: 2px solid #556B2F !important;
+        }
+
+        /* Botão Voltar no topo */
+        .back-row-top {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .leitor-painel-global {
+                right: 10px;
+                left: 10px;
+                width: auto;
+            }
+            
+            #botao-leitor-global {
+                bottom: 10px;
+                right: 10px;
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+            
+            .controle-botoes-global {
+                grid-template-columns: 1fr;
+            }
+
+            .back-row-top {
+                top: 10px;
+                left: 10px;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Botão Voltar no TOPO (comum a todas as páginas exceto index) -->
+    {% if request.path != '/' %}
+    <div class="back-row-top">
+        <a href="/" class="btn btn-primary">Voltar ao Menu</a>
+    </div>
+    {% endif %}
+
+    <!-- Conteúdo específico de cada página -->
+    {% block content %}{% endblock %}
+
+    <!-- Leitor de Tela Flutuante (presente em TODAS as páginas) -->
+    <button id="botao-leitor-global">🎧 Acessibilidade</button>
+    
+    <div id="painel-leitor-global" class="leitor-painel-global">
+        <div class="leitor-header-global">
+            <h3>🎧 Leitor de Tela</h3>
+            <button id="fechar-painel-global" class="btn-fechar-global">×</button>
+        </div>
+        <div class="leitor-controles-global">
+            <div class="controle-grupo-global">
+                <label for="velocidade-leitor-global">Velocidade:</label>
+                <input type="range" id="velocidade-leitor-global" min="0.5" max="2" step="0.1" value="1.0">
+                <span id="valor-velocidade-global">1.0x</span>
+            </div>
+            <div class="controle-grupo-global">
+                <label for="volume-leitor-global">Volume:</label>
+                <input type="range" id="volume-leitor-global" min="0" max="1" step="0.1" value="1.0">
+                <span id="valor-volume-global">100%</span>
+            </div>
+            <div class="controle-botoes-global">
+                <button id="btn-pausar-global" class="btn-controle-global">⏸️ Pausar</button>
+                <button id="btn-parar-global" class="btn-controle-global">⏹️ Parar</button>
+                <button id="btn-ler-pagina-global" class="btn-controle-global">📄 Ler Página</button>
+                <button id="btn-ler-elemento-global" class="btn-controle-global">🔍 Ler Elemento</button>
+                <button id="btn-desativar-global" class="btn-controle-global btn-desativar">🚫 Desativar Leitor</button>
+            </div>
+            <div class="leitor-status-global" id="leitor-status-global">
+                Leitor desativado
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script do Leitor Flutuante CORRIGIDO -->
+    <script>
+        // Leitor de Tela Flutuante - CORRIGIDO (Modo seleção sem alterar estilos)
+        class LeitorFlutuante {
+            constructor() {
+                this.ativo = false;
+                this.synth = window.speechSynthesis;
+                this.utterance = null;
+                this.velocidade = 1.0;
+                this.volume = 1.0;
+                this.vozPortugues = null;
+                this.modoSelecaoAtivo = false;
+                this.elementosSelecao = [];
+                
+                this.inicializarVoz();
+                this.adicionarListeners();
+                this.verificarEstadoSalvo();
+            }
+
+            inicializarVoz() {
+                const carregarVozes = () => {
+                    const vozes = this.synth.getVoices();
+                    this.vozPortugues = vozes.find(voz => 
+                        voz.lang.startsWith('pt') || 
+                        voz.lang.includes('pt-') ||
+                        voz.name.toLowerCase().includes('portuguese')
+                    );
+                    
+                    if (!this.vozPortugues && vozes.length > 0) {
+                        this.vozPortugues = vozes[0];
+                    }
+                };
+
+                if (this.synth.onvoiceschanged !== undefined) {
+                    this.synth.onvoiceschanged = carregarVozes;
+                }
+                
+                carregarVozes();
+            }
+
+            adicionarListeners() {
+                // Botão principal
+                document.getElementById('botao-leitor-global').addEventListener('click', () => {
+                    this.toggleLeitor();
+                });
+
+                // Controles do painel
+                document.getElementById('fechar-painel-global').addEventListener('click', () => {
+                    this.fecharPainel();
+                });
+
+                document.getElementById('velocidade-leitor-global').addEventListener('input', (e) => {
+                    this.velocidade = parseFloat(e.target.value);
+                    document.getElementById('valor-velocidade-global').textContent = `${this.velocidade}x`;
+                    this.salvarConfiguracoes();
+                });
+
+                document.getElementById('volume-leitor-global').addEventListener('input', (e) => {
+                    this.volume = parseFloat(e.target.value);
+                    document.getElementById('valor-volume-global').textContent = `${Math.round(this.volume * 100)}%`;
+                    this.salvarConfiguracoes();
+                });
+
+                document.getElementById('btn-pausar-global').addEventListener('click', () => {
+                    this.pausarLeitura();
+                });
+
+                document.getElementById('btn-parar-global').addEventListener('click', () => {
+                    this.pararLeitura();
+                });
+
+                document.getElementById('btn-ler-pagina-global').addEventListener('click', () => {
+                    this.lerPaginaCompleta();
+                });
+
+                document.getElementById('btn-ler-elemento-global').addEventListener('click', () => {
+                    this.toggleModoSelecao();
+                });
+
+                document.getElementById('btn-desativar-global').addEventListener('click', () => {
+                    this.desativarCompletamente();
+                });
+
+                // Teclas de atalho
+                document.addEventListener('keydown', (e) => {
+                    if (e.altKey && e.key === 'L') {
+                        e.preventDefault();
+                        this.toggleLeitor();
+                    }
+                    
+                    if (e.key === 'Escape') {
+                        this.fecharPainel();
+                        this.desativarModoSelecao();
+                        this.pararLeitura();
+                    }
+                });
+
+                // Fechar painel ao clicar fora
+                document.addEventListener('click', (e) => {
+                    const painel = document.getElementById('painel-leitor-global');
+                    const botao = document.getElementById('botao-leitor-global');
+                    
+                    if (painel && painel.classList.contains('mostrar') && 
+                        !painel.contains(e.target) && 
+                        e.target !== botao) {
+                        this.fecharPainel();
+                    }
+                });
+            }
+
+            salvarConfiguracoes() {
+                const configuracoes = {
+                    ativo: this.ativo,
+                    velocidade: this.velocidade,
+                    volume: this.volume
+                };
+                localStorage.setItem('leitorConfig', JSON.stringify(configuracoes));
+            }
+
+            verificarEstadoSalvo() {
+                const salvo = localStorage.getItem('leitorConfig');
+                if (salvo) {
+                    const config = JSON.parse(salvo);
+                    this.ativo = config.ativo;
+                    this.velocidade = config.velocidade;
+                    this.volume = config.volume;
+
+                    // Atualizar controles
+                    document.getElementById('velocidade-leitor-global').value = this.velocidade;
+                    document.getElementById('volume-leitor-global').value = this.volume;
+                    document.getElementById('valor-velocidade-global').textContent = `${this.velocidade}x`;
+                    document.getElementById('valor-volume-global').textContent = `${Math.round(this.volume * 100)}%`;
+
+                    if (this.ativo) {
+                        this.mostrarInterfaceAtiva();
+                    }
+                }
+            }
+
+            mostrarInterfaceAtiva() {
+                const botao = document.getElementById('botao-leitor-global');
+                const status = document.getElementById('leitor-status-global');
+                
+                if (botao && status) {
+                    botao.classList.add('ativo');
+                    status.textContent = 'Leitor ativado';
+                    status.style.color = '#556B2F';
+                }
+            }
+
+            toggleLeitor() {
+                this.ativo = !this.ativo;
+                const botao = document.getElementById('botao-leitor-global');
+                const painel = document.getElementById('painel-leitor-global');
+                const status = document.getElementById('leitor-status-global');
+
+                if (this.ativo) {
+                    botao.classList.add('ativo');
+                    if (painel) painel.classList.add('mostrar');
+                    status.textContent = 'Leitor ativado';
+                    status.style.color = '#556B2F';
+                    this.falar('Leitor de tela ativado. Use Alt + L para ativar ou desativar rapidamente.');
+                } else {
+                    botao.classList.remove('ativo');
+                    if (painel) painel.classList.remove('mostrar');
+                    status.textContent = 'Leitor desativado';
+                    status.style.color = '#6c757d';
+                    this.desativarModoSelecao();
+                    this.pararLeitura();
+                }
+
+                this.salvarConfiguracoes();
+            }
+
+            desativarCompletamente() {
+                this.ativo = false;
+                const botao = document.getElementById('botao-leitor-global');
+                const painel = document.getElementById('painel-leitor-global');
+                const status = document.getElementById('leitor-status-global');
+                
+                if (botao) botao.classList.remove('ativo');
+                if (painel) painel.classList.remove('mostrar');
+                if (status) {
+                    status.textContent = 'Leitor desativado completamente';
+                    status.style.color = '#dc3545';
+                }
+                
+                this.desativarModoSelecao();
+                this.pararLeitura();
+                this.falar('Leitor de tela desativado completamente.');
+                
+                this.salvarConfiguracoes();
+            }
+
+            toggleModoSelecao() {
+                if (this.modoSelecaoAtivo) {
+                    this.desativarModoSelecao();
+                } else {
+                    this.ativarModoSelecao();
+                }
+            }
+
+            ativarModoSelecao() {
+                if (!this.ativo) return;
+
+                this.modoSelecaoAtivo = true;
+                this.falar('Modo de seleção ativado. Clique em qualquer elemento da página para ouvir seu conteúdo. Pressione Escape para sair.');
+
+                // Selecionar elementos sem modificar seus estilos originais
+                this.elementosSelecao = Array.from(document.querySelectorAll(
+                    'h1, h2, h3, h4, h5, h6, p, a, button, label, li, td, th, input, select, textarea, .card, .btn, .form-control'
+                ));
+
+                // Aplicar overlay sutil sem alterar estilos dos elementos
+                this.elementosSelecao.forEach(elemento => {
+                    const rect = elemento.getBoundingClientRect();
+                    if (rect.width > 0 && rect.height > 0) { // Elementos visíveis apenas
+                        // Criar overlay sutil
+                        const overlay = document.createElement('div');
+                        overlay.className = 'leitor-overlay';
+                        overlay.style.cssText = `
+                            position: absolute;
+                            left: ${rect.left + window.scrollX}px;
+                            top: ${rect.top + window.scrollY}px;
+                            width: ${rect.width}px;
+                            height: ${rect.height}px;
+                            background-color: rgba(85, 107, 47, 0.1);
+                            border: 2px dashed #556B2F;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            z-index: 9998;
+                            pointer-events: auto;
+                            transition: all 0.2s ease;
+                        `;
+                        
+                        // Armazenar referência ao elemento original
+                        overlay.dataset.elementId = this.elementosSelecao.indexOf(elemento);
+                        
+                        overlay.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            this.lerElementoViaOverlay(elemento);
+                        });
+                        
+                        overlay.addEventListener('mouseenter', () => {
+                            overlay.style.backgroundColor = 'rgba(85, 107, 47, 0.2)';
+                            overlay.style.border = '2px solid #556B2F';
+                        });
+                        
+                        overlay.addEventListener('mouseleave', () => {
+                            overlay.style.backgroundColor = 'rgba(85, 107, 47, 0.1)';
+                            overlay.style.border = '2px dashed #556B2F';
+                        });
+                        
+                        document.body.appendChild(overlay);
+                        elemento.leitorOverlay = overlay;
+                    }
+                });
+
+                document.getElementById('leitor-status-global').textContent = 'Modo seleção ATIVO - clique nos elementos';
+                document.getElementById('btn-ler-elemento-global').textContent = '🔴 Sair do Modo Seleção';
+            }
+
+            lerElementoViaOverlay(elemento) {
+                if (!this.modoSelecaoAtivo) return;
+
+                const texto = this.extrairTextoElemento(elemento);
+
+                if (texto) {
+                    // Destacar temporariamente com overlay
+                    if (elemento.leitorOverlay) {
+                        elemento.leitorOverlay.style.backgroundColor = 'rgba(255, 193, 7, 0.3)';
+                        elemento.leitorOverlay.style.border = '2px solid #FFC107';
+                        
+                        setTimeout(() => {
+                            if (elemento.leitorOverlay) {
+                                elemento.leitorOverlay.style.backgroundColor = 'rgba(85, 107, 47, 0.1)';
+                                elemento.leitorOverlay.style.border = '2px dashed #556B2F';
+                            }
+                        }, 2000);
+                    }
+                    
+                    this.falar(texto, 'alta');
+                }
+            }
+
+            desativarModoSelecao() {
+                if (!this.modoSelecaoAtivo) return;
+
+                this.modoSelecaoAtivo = false;
+                
+                // Remover todos os overlays
+                this.elementosSelecao.forEach(elemento => {
+                    if (elemento.leitorOverlay) {
+                        elemento.leitorOverlay.remove();
+                        elemento.leitorOverlay = null;
+                    }
+                });
+                
+                this.elementosSelecao = [];
+
+                document.getElementById('leitor-status-global').textContent = 'Modo seleção desativado';
+                document.getElementById('btn-ler-elemento-global').textContent = '🔍 Ler Elemento';
+            }
+
+            falar(texto, prioridade = 'baixa') {
+                if (!this.ativo) return;
+
+                // Parar leitura anterior se for prioridade alta
+                if (prioridade === 'alta' && this.synth.speaking) {
+                    this.synth.cancel();
+                }
+
+                // Aguardar se já estiver lendo algo menos importante
+                if (this.synth.speaking && prioridade === 'baixa') {
+                    setTimeout(() => this.falar(texto, prioridade), 1000);
+                    return;
+                }
+
+                this.utterance = new SpeechSynthesisUtterance(texto);
+                
+                if (this.vozPortugues) {
+                    this.utterance.voice = this.vozPortugues;
+                }
+                
+                this.utterance.rate = this.velocidade;
+                this.utterance.volume = this.volume;
+                this.utterance.pitch = 1;
+
+                this.utterance.onend = () => {
+                    // Limpa elementos lendo quando a fala termina
+                    document.querySelectorAll('.elemento-lendo-global').forEach(el => {
+                        el.classList.remove('elemento-lendo-global');
+                    });
+                };
+
+                this.synth.speak(this.utterance);
+            }
+
+            pausarLeitura() {
+                if (this.synth.speaking && !this.synth.paused) {
+                    this.synth.pause();
+                    document.getElementById('leitor-status-global').textContent = 'Leitura pausada';
+                } else if (this.synth.paused) {
+                    this.synth.resume();
+                    document.getElementById('leitor-status-global').textContent = 'Leitura em andamento';
+                }
+            }
+
+            pararLeitura() {
+                this.synth.cancel();
+                document.querySelectorAll('.elemento-lendo-global').forEach(el => {
+                    el.classList.remove('elemento-lendo-global');
+                });
+                document.getElementById('leitor-status-global').textContent = 'Leitura interrompida';
+            }
+
+            lerPaginaCompleta() {
+                if (!this.ativo) return;
+
+                const elementos = this.obterElementosParaLer();
+                let textoCompleto = '';
+
+                elementos.forEach(elemento => {
+                    const texto = this.extrairTextoElemento(elemento);
+                    if (texto) {
+                        textoCompleto += texto + '. ';
+                    }
+                });
+
+                this.falar('Iniciando leitura da página. ' + textoCompleto, 'alta');
+            }
+
+            obterElementosParaLer() {
+                const seletores = [
+                    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                    'p', 'a[href]', 'button', 'label',
+                    'li', 'td', 'th',
+                    '[role="heading"]', '[role="button"]', '[role="link"]',
+                    '.card', '.btn', '.form-label', '.page-header'
+                ];
+
+                return Array.from(document.querySelectorAll(seletores.join(',')))
+                    .filter(el => this.extrairTextoElemento(el))
+                    .sort((a, b) => {
+                        return a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+                    });
+            }
+
+            extrairTextoElemento(elemento) {
+                if (elemento.offsetParent === null) return '';
+
+                let texto = '';
+
+                if (elemento.tagName === 'IMG' && elemento.alt) {
+                    texto = `Imagem: ${elemento.alt}`;
+                }
+                else if (elemento.tagName === 'INPUT' || elemento.tagName === 'SELECT' || elemento.tagName === 'TEXTAREA') {
+                    const label = document.querySelector(`label[for="${elemento.id}"]`);
+                    texto = label ? label.textContent.trim() : elemento.placeholder || '';
+                    if (elemento.value && elemento.type !== 'password') {
+                        texto += `: ${elemento.value}`;
+                    }
+                }
+                else {
+                    texto = elemento.textContent || elemento.innerText || '';
+                }
+
+                texto = texto.replace(/\s+/g, ' ').trim();
+                
+                if (elemento.tagName === 'A' && elemento.href) {
+                    texto += ' link';
+                } else if (elemento.tagName === 'BUTTON') {
+                    texto += ' botão';
+                } else if (elemento.tagName.startsWith('H')) {
+                    texto = `Cabeçalho ${elemento.tagName.substring(1)}: ${texto}`;
+                }
+
+                return texto;
+            }
+
+            fecharPainel() {
+                const painel = document.getElementById('painel-leitor-global');
+                if (painel) {
+                    painel.classList.remove('mostrar');
+                }
+                this.desativarModoSelecao();
+            }
+        }
+
+        // Inicializar leitor quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', () => {
+            window.leitorFlutuante = new LeitorFlutuante();
+            
+            // Anúncio inicial se estiver ativo
+            setTimeout(() => {
+                if (window.leitorFlutuante && window.leitorFlutuante.ativo) {
+                    const paginaAtual = document.title || 'Página atual';
+                    window.leitorFlutuante.falar(`${paginaAtual} carregada. Leitor de tela ativo.`);
+                }
+            }, 1000);
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

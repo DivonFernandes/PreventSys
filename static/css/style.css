@@ -1,0 +1,190 @@
+/* ===== BeneficSeeds – Identidade Visual Global ===== */
+
+/* Paleta de cores */
+:root {
+    --verde-oliva: #556B2F;
+    --amarelo-dourado: #DAA520;
+    --marrom-avermelhado: #8B4513;
+    --cinza-ardosia: #708090;
+    --branco: #FFFFFF;
+}
+
+/* Tipografia */
+body {
+    font-family: 'Nunito Sans', sans-serif;
+    color: var(--cinza-ardosia);
+    background: linear-gradient(135deg, var(--verde-oliva) 30%, var(--marrom-avermelhado) 90%);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    justify-content: center;
+}
+
+/* Componentes */
+.card {
+    background-color: var(--branco);
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    color: var(--cinza-ardosia);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 500px; /* antes era 480px */
+}
+
+.card-wide {
+    background-color: var(--branco);
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    color: var(--cinza-ardosia);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 1200px; /* maior que o padrão */
+}
+
+h2 {
+    font-family: 'Merriweather', serif;
+    color: var(--verde-oliva);
+    font-weight: 700;
+}
+
+p {
+    color: var(--cinza-ardosia);
+    opacity: 0.9;
+}
+
+/* Botões BeneficSeeds */
+.btn {
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    color: var(--branco);
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Cores preenchidas */
+.btn-primary {
+    background-color: var(--verde-oliva);
+    border: none;
+}
+.btn-primary:hover {
+    filter: brightness(1.1);
+}
+
+.btn-success {
+    background-color: var(--amarelo-dourado);
+    border: none;
+}
+.btn-success:hover {
+    filter: brightness(1.1);
+}
+
+.btn-warning {
+    background-color: var(--marrom-avermelhado);
+    border: none;
+}
+.btn-warning:hover {
+    filter: brightness(1.1);
+}
+
+/* Rodapé */
+footer {
+    text-align: center;
+    color: var(--branco);
+    opacity: 0.8;
+    font-size: 0.9rem;
+    margin-top: 1rem;
+}
+
+/* Ajustes reutilizáveis */
+.centered {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    min-height: 100vh;
+    max-width: 95%; /* remove limite do Bootstrap */
+    padding: 2rem; /* evita colar nas bordas da tela */
+}
+
+.bottom-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.card.card-body {
+  max-height: none;
+  overflow: visible;
+}
+
+.collapse-card {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1rem; /* padding interno para não colar nas bordas */
+    box-sizing: border-box; /* importante para o width 100% funcionar corretamente */
+}
+
+.edit-col {
+    flex: 1 1 45%;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+/* ===== Grid e cards para dashboard de gráficos ===== */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.chart-card {
+  background-color: var(--branco);
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ajuste da imagem do gráfico para manter proporção */
+.chart-card img.chart-img {
+  width: 100%;
+  height: 220px;        /* altura fixa para uniformidade; ajustar se preferir */
+  object-fit: contain;  /* mantém o gráfico inteiro sem cortar */
+}
+
+/* Header do dashboard */
+.page-header {
+  color: var(--verde-oliva);
+  font-family: 'Merriweather', serif;
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Botão voltar no fim */
+.back-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}

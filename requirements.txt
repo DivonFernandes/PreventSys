@@ -1,0 +1,12 @@
+pip install Flask
+pip install Flask-SQLAlchemy
+pip install SQLAlchemy
+pip install Werkzeug
+pip install matplotlib
+pip install Pillow
+pip install requests
+pip install db-sqlite3
+pip install views
+pip install utils
+
+
